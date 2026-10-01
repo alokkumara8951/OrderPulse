@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -102,7 +102,7 @@ export function DataTable<T>({
     virtualizer.scrollToIndex(clamped, { align: 'auto' });
   }
 
-  function handleRowKeyDown(event: React.KeyboardEvent<HTMLDivElement>, index: number) {
+  function handleRowKeyDown(event: KeyboardEvent<HTMLDivElement>, index: number) {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       focusRow(index + 1);
