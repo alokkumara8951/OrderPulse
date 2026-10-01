@@ -58,7 +58,7 @@ export function useKpiSnapshot() {
       const cutoff = Date.now() - 60_000;
       eventTimestamps.current = eventTimestamps.current.filter((t) => t > cutoff);
 
-      const pages = queryClient.getQueriesData<OrdersPage>({ queryKey: ordersKeys.all, exact: false });
+      const pages = queryClient.getQueriesData<OrdersPage>({ queryKey: ordersKeys.lists(), exact: false });
       const seen = new Map<string, Order>();
       pages.forEach(([, page]) => {
         page?.rows.forEach((row) => seen.set(row.id, row));

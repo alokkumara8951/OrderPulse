@@ -3,8 +3,9 @@ import type { Order, OrdersPage, FilterState, SortState } from '../../../shared/
 
 export const ordersKeys = {
   all: ['orders'] as const,
+  lists: () => [...ordersKeys.all, 'list'] as const,
   list: (sort: SortState[], filters: FilterState, page: number) =>
-    [...ordersKeys.all, 'list', { sort, filters, page }] as const,
+    [...ordersKeys.lists(), { sort, filters, page }] as const,
   detail: (id: string) => [...ordersKeys.all, 'detail', id] as const,
 };
 
@@ -14,7 +15,7 @@ export const ordersKeys = {
  * the rows that changed instead of invalidating/refetching 10k+ rows.
  */
 export function patchOrderInCache(queryClient: QueryClient, order: Order): void {
-  queryClient.setQueriesData<OrdersPage>({ queryKey: ordersKeys.all, exact: false }, (old) => {
+  queryClient.setQueriesData<OrdersPage>({ queryKey: ordersKeys.lists(), exact: false }, (old) => {
     if (!old) return old;
     const idx = old.rows.findIndex((r) => r.id === order.id);
     if (idx === -1) return old;

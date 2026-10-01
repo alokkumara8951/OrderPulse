@@ -29,7 +29,7 @@ export function useOrderStatusMutation() {
       await queryClient.cancelQueries({ queryKey: ordersKeys.all });
 
       const snapshot: Snapshot = {
-        lists: queryClient.getQueriesData<OrdersPage>({ queryKey: ordersKeys.all, exact: false }),
+        lists: queryClient.getQueriesData<OrdersPage>({ queryKey: ordersKeys.lists(), exact: false }),
         detail: queryClient.getQueryData<Order>(ordersKeys.detail(order.id)),
       };
 
