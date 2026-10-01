@@ -19,7 +19,7 @@ describe('authz permissions', () => {
     expect(roleHasPermission('SUPERVISOR', 'kpi:view-advanced')).toBe(true);
   });
 
-  it('denies an unknown permission for both roles', () => {
+  it('denies views:save to AGENT but grants it to SUPERVISOR', () => {
     expect(roleHasPermission('AGENT', 'views:save')).toBe(false);
     expect(roleHasPermission('SUPERVISOR', 'views:save')).toBe(true);
   });

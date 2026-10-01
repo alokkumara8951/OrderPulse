@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -61,15 +61,39 @@ export function DataTable<T>({
     overscan: 12,
   });
 
+  // With virtualization only rows within the overscan window are mounted, so
+  // arrow-key navigation can't just look up the next row by DOM id - it may
+  // not exist yet. Instead we scroll the target row into view and focus it
+  // once react-virtual has actually mounted it.
+  const pendingFocusIndex = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (pendingFocusIndex.current === null) return;
+    const el = document.getElementById(rowDomId(pendingFocusIndex.current));
+    if (el) {
+      el.focus();
+      pendingFocusIndex.current = null;
+    }
+  });
+
+  function focusRow(index: number) {
+    const clamped = Math.max(0, Math.min(rows.length - 1, index));
+    const el = document.getElementById(rowDomId(clamped));
+    if (el) {
+      el.focus();
+      return;
+    }
+    pendingFocusIndex.current = clamped;
+    virtualizer.scrollToIndex(clamped, { align: 'auto' });
+  }
+
   function handleRowKeyDown(event: React.KeyboardEvent<HTMLDivElement>, index: number) {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      const next = document.getElementById(rowDomId(index + 1));
-      next?.focus();
+      focusRow(index + 1);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      const prev = document.getElementById(rowDomId(index - 1));
-      prev?.focus();
+      focusRow(index - 1);
     } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       const row = rows[index];

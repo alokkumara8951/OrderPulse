@@ -11,10 +11,11 @@ export function useAnnouncer() {
   const counter = useRef(0);
 
   const announce = useCallback((text: string) => {
-    counter.current += 1;
-    // Append the monotonically increasing counter as invisible text so the
-    // live region's content always differs between calls, guaranteeing
-    // screen readers announce it even if the same message repeats.
+    // Cycle through a small, bounded number of invisible suffixes so the
+    // live region's content differs between consecutive calls (guaranteeing
+    // screen readers announce repeats), without growing unbounded over a
+    // long-lived session with many live updates.
+    counter.current = (counter.current + 1) % 7;
     setMessage(`${text}${'\u200b'.repeat(counter.current)}`);
   }, []);
 
