@@ -11,11 +11,12 @@ export function useAnnouncer() {
   const counter = useRef(0);
 
   const announce = useCallback((text: string) => {
-    // Cycle through a small, bounded number of invisible suffixes so the
-    // live region's content differs between consecutive calls (guaranteeing
-    // screen readers announce repeats), without growing unbounded over a
-    // long-lived session with many live updates.
-    counter.current = (counter.current + 1) % 7;
+    // Cycle through a small, bounded, never-empty number of invisible
+    // suffixes so the live region's content always differs between
+    // consecutive calls (guaranteeing screen readers announce repeats),
+    // without growing unbounded over a long-lived session with many live
+    // updates.
+    counter.current = (counter.current % 7) + 1;
     setMessage(`${text}${'\u200b'.repeat(counter.current)}`);
   }, []);
 

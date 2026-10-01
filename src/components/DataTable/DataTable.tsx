@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -64,17 +64,32 @@ export function DataTable<T>({
   // With virtualization only rows within the overscan window are mounted, so
   // arrow-key navigation can't just look up the next row by DOM id - it may
   // not exist yet. Instead we scroll the target row into view and focus it
-  // once react-virtual has actually mounted it.
-  const pendingFocusIndex = useRef<number | null>(null);
+  // once react-virtual has actually mounted it. Using state (not a ref) for
+  // the pending index means this effect only runs while a focus request is
+  // actually in flight, not on every unrelated re-render (sorting changes,
+  // live-stream row patches, etc.).
+  const [pendingFocusIndex, setPendingFocusIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    if (pendingFocusIndex.current === null) return;
-    const el = document.getElementById(rowDomId(pendingFocusIndex.current));
-    if (el) {
-      el.focus();
-      pendingFocusIndex.current = null;
-    }
-  });
+    if (pendingFocusIndex === null) return;
+    let cancelled = false;
+    let rafId = 0;
+    const tryFocus = () => {
+      if (cancelled) return;
+      const el = document.getElementById(rowDomId(pendingFocusIndex));
+      if (el) {
+        el.focus();
+        setPendingFocusIndex(null);
+      } else {
+        rafId = requestAnimationFrame(tryFocus);
+      }
+    };
+    tryFocus();
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+    };
+  }, [pendingFocusIndex]);
 
   function focusRow(index: number) {
     const clamped = Math.max(0, Math.min(rows.length - 1, index));
@@ -83,7 +98,7 @@ export function DataTable<T>({
       el.focus();
       return;
     }
-    pendingFocusIndex.current = clamped;
+    setPendingFocusIndex(clamped);
     virtualizer.scrollToIndex(clamped, { align: 'auto' });
   }
 

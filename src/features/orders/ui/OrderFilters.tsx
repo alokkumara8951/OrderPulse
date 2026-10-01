@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import type { FilterState } from '../../../shared/types/order';
 import { Button } from '../../../components/Button';
 
@@ -12,6 +12,13 @@ const FILTERABLE_COLUMNS: Array<{ id: string; label: string }> = [
 
 export function OrderFilters({ filters, onChange }: { filters: FilterState; onChange: (next: FilterState) => void }) {
   const [draft, setDraft] = useState<FilterState>(filters);
+
+  // Keep the draft in sync when the active filters change externally (e.g.
+  // browser back/forward navigation updating the URL, or another part of
+  // the app clearing filters) so the inputs never show stale values.
+  useEffect(() => {
+    setDraft(filters);
+  }, [filters]);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
