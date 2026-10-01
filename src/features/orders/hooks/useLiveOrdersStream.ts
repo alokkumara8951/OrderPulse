@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { mockOrderStream, orderStreamEventSchema } from '../../../mocks/stream';
+import { mockOrderStream, orderStreamEventSchema, type MockOrderStream } from '../../../mocks/stream';
 import { patchOrderInCache } from '../model/cache';
 import { Backoff } from '../../../shared/utils/backoff';
 import { env } from '../../../shared/env';
@@ -24,7 +24,7 @@ export interface LiveStreamState {
  * and stale detection; the mock transport (src/mocks/stream.ts) only
  * simulates a flaky connection.
  */
-export function useLiveOrdersStream(onOrderUpdated?: (order: Order) => void) {
+export function useLiveOrdersStream(onOrderUpdated?: (order: Order) => void, stream: MockOrderStream = mockOrderStream) {
   const queryClient = useQueryClient();
   const [state, setState] = useState<LiveStreamState>({
     status: 'connecting',
@@ -44,11 +44,11 @@ export function useLiveOrdersStream(onOrderUpdated?: (order: Order) => void) {
     let disposed = false;
 
     function connect() {
-      mockOrderStream.connect();
+      stream.connect();
       setState((s) => ({ ...s, status: 'open' }));
     }
 
-    const unsubscribeMessage = mockOrderStream.onMessage((raw) => {
+    const unsubscribeMessage = stream.onMessage((raw) => {
       const parsed = orderStreamEventSchema.safeParse(raw);
       if (!parsed.success) return; // drop invalid payloads at the boundary
       const event = parsed.data;
@@ -61,7 +61,7 @@ export function useLiveOrdersStream(onOrderUpdated?: (order: Order) => void) {
       }
     });
 
-    const unsubscribeClose = mockOrderStream.onClose(() => {
+    const unsubscribeClose = stream.onClose(() => {
       if (disposed) return;
       const delay = backoffRef.current.next();
       setState((s) => ({ ...s, status: 'reconnecting', reconnectAttempt: backoffRef.current.attemptCount }));
@@ -88,9 +88,9 @@ export function useLiveOrdersStream(onOrderUpdated?: (order: Order) => void) {
       unsubscribeClose();
       if (reconnectTimer) clearTimeout(reconnectTimer);
       clearInterval(staleCheck);
-      mockOrderStream.disconnect();
+      stream.disconnect();
     };
-  }, [queryClient]);
+  }, [queryClient, stream]);
 
   return state;
 }

@@ -8,9 +8,11 @@ import { getSeedOrders } from './seed';
  */
 class OrderStore {
   private orders = new Map<string, Order>();
+  private orderIds: string[];
 
   constructor() {
     getSeedOrders().forEach((order) => this.orders.set(order.id, order));
+    this.orderIds = Array.from(this.orders.keys());
   }
 
   list(): Order[] {
@@ -61,7 +63,7 @@ class OrderStore {
 
   /** Picks a random subset of orders and nudges their status, simulating backend activity. */
   simulateRandomUpdates(count: number): Order[] {
-    const ids = Array.from(this.orders.keys());
+    const ids = this.orderIds;
     const touched: Order[] = [];
     for (let i = 0; i < count; i += 1) {
       const id = ids[Math.floor(Math.random() * ids.length)];

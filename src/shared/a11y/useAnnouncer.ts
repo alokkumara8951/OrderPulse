@@ -12,9 +12,10 @@ export function useAnnouncer() {
 
   const announce = useCallback((text: string) => {
     counter.current += 1;
-    // Prefix with a zero-width counter so repeated identical messages are
-    // still announced by screen readers (live regions only announce diffs).
-    setMessage(`${text}\u200b${'​'.repeat(counter.current % 2)}`);
+    // Append the monotonically increasing counter as invisible text so the
+    // live region's content always differs between calls, guaranteeing
+    // screen readers announce it even if the same message repeats.
+    setMessage(`${text}${'\u200b'.repeat(counter.current)}`);
   }, []);
 
   return { message, announce };

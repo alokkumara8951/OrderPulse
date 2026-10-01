@@ -37,7 +37,11 @@ export const handlers = [
           const av = (a as unknown as Record<string, unknown>)[sort.id];
           const bv = (b as unknown as Record<string, unknown>)[sort.id];
           if (av === bv) continue;
-          const cmp = av! > bv! ? 1 : -1;
+          if (av === undefined || av === null) return sort.desc ? -1 : 1;
+          if (bv === undefined || bv === null) return sort.desc ? 1 : -1;
+          const comparable =
+            typeof av === 'number' && typeof bv === 'number' ? av > bv : String(av) > String(bv);
+          const cmp = comparable ? 1 : -1;
           return sort.desc ? -cmp : cmp;
         }
         return 0;
